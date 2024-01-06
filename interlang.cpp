@@ -67,6 +67,83 @@ static int gettok() {
     LastChar = std::getchar();
     return ThisChar;
 }
+
+/* Base class for all expression nodes */
+class ExprAST {
+    public:
+        virtual ~ExprAST() = default;
+};
+
+/*for numeric literals*/
+class NumberExprAST : public ExprAST {
+    double Val;
+
+    public:
+        explicit NumberExprAST(double Val) : Val(Val) {}
+};
+
+/*for variables*/
+class VariableExprAST : public ExprAST {
+    std::string Name;
+
+    public:
+        explicit VariableExprAST(std::string Name) : Name(std::move(Name)) {}
+};
+
+/*for binary operator*/
+class BinaryExprAST : public ExprAST {
+    char Op;
+    std::unique_ptr<ExprAST> LHS, RHS;
+
+    public:
+        BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS)
+            : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+};
+
+/*For funtion calls*/
+class CallExprAST : public ExprAST {
+    std::string Callee;
+    std::vector<std::unique_ptr<ExprAST>> Args;
+
+    public:
+    CallExprAST(std::string Callee, std::vector<std::unique_ptr<ExprAST>> Args)
+        : Callee(std::move(Callee)), Args(std::move(Args)) {}
+};
+
+/*AST for function prototypes*/
+class PrototypeAST {
+    std::string Name;
+    std::vector<std::string> Args;
+
+    public:
+    PrototypeAST(std::string Name, std::vector<std::string> Args)
+        : Name(std::move(Name), Args(std::move(Args))) {}
+};
+
+/*AST for the function itself*/
+class FunctionAST {
+    std::unique_ptr<PrototypeAST> Proto;
+    std::unique_ptr<ExprAST> Body;
+
+    public:
+    FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body)
+        : Proto(std::move(Proto)), Body(std::move(Body)) {}
+};
+
+static int CurTok;
+static int getNextToken() {
+    return CurTok = gettok();
+}
+/// LogError* - These are little helper functions for error handling.
+std::unique_ptr<ExprAST> LogError(const char *Str) {
+    fprintf(stderr, "Error: %s\n", Str);
+    return nullptr;
+}
+std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
+    LogError(Str);
+    return nullptr;
+}
+
 int main(int argc, char **argv) {
     return 0;
 }
